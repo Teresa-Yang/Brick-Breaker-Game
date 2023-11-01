@@ -1,0 +1,285 @@
+// brick breaker game
+import java.applet.*; 
+import java.awt.*; 
+import java.awt.event.*;
+
+public class BrickBreakerGame extends Applet implements Runnable, KeyListener
+{ 
+  boolean play = false;
+  
+  int appletsize_x = 600;
+  int appletsize_y = 700;
+  int speed = 8;
+  int speedChanger = 0;
+  
+  //ball
+  int x_pos = 300; 
+  int y_pos = 280; 
+  int radius = 13; 
+  int x_speed = 0;
+  int y_speed = 0;
+  
+  
+  int points = 0;
+  int lives = 5;
+  Font font= new Font("Agency FB", Font.PLAIN, 35);
+  Font title= new Font("Agency FB", Font.BOLD, 35);
+  
+  //paddle
+  int xP = 270;
+  int yP = 650;
+  int paddleWidth = 100;
+  int paddleHeight =15;
+  int xP_speed = 0;
+  
+  
+  int [] displayBricks = {1,1,1,1,1,1};
+  int brickCounter=0;
+  
+  
+  private Image dbImage; 
+  private Graphics dbg; 
+
+  public void init() { 
+  
+  addKeyListener(this);
+  }
+  public void start() 
+  {
+    Thread th = new Thread (this); 
+    th.start (); 
+  }
+  
+  
+  
+  public void keyReleased (KeyEvent e)
+  {
+    xP_speed = 0;
+  }   
+  public void keyTyped(KeyEvent e){}  
+  public void keyPressed (KeyEvent e)
+    {
+    int code =e.getKeyCode(); 
+    
+    if (code == KeyEvent.VK_SPACE)
+    {
+      play = true;
+      y_speed = 1;
+    }
+    
+    if (code == KeyEvent.VK_LEFT) 
+    { 
+      xP_speed = -2;
+    } 
+    else if (code == KeyEvent.VK_RIGHT)   
+    {  
+      xP_speed = 2;
+    }   
+  }
+
+  
+  
+  public void run () {  
+    
+    while (true) 
+    {
+      x_pos += x_speed; 
+      y_pos += y_speed;
+      
+      xP += xP_speed;
+      
+      //changing directions if the ball hits the sides
+      if (x_pos >= appletsize_x - radius) 
+      {
+        x_speed = -1;
+      } 
+      else if ( x_pos < radius)
+      {
+        x_speed = 1;
+      }
+      else if ( y_pos < radius + 35)
+      {
+        y_speed = 1;
+      } 
+      //when the ball hits the bottom
+      else if (y_pos > appletsize_y - radius && lives > 0)
+      {
+        lives -= 1;
+        y_speed = 0;
+        x_speed = 0;
+        play = false;
+        x_pos = 300; 
+        y_pos = 280; 
+        
+      }
+      
+      //changing directions is the ball hits paddle
+      if(y_pos+radius >= yP)
+      {
+        if (x_pos >= xP && x_pos <= xP+paddleWidth)
+        {
+          if(x_pos >= xP+15 && x_pos <= xP+50)
+          {
+            x_speed = -1;
+          }
+          else if(x_pos >= xP+50 && x_pos <= xP+85)
+          {
+            x_speed = 1;
+          }
+          else if(x_pos >= xP && x_pos <= xP+15)
+          {
+            x_speed = -2;
+          }else if(x_pos >= xP+85 && x_pos <= xP+paddleWidth)
+          {
+            x_speed = 2;
+          }
+        y_speed *= -1;
+        }
+      }
+      
+      
+      //hits bricks
+      for(int i=0; i<6; i++)
+      {
+        if (y_pos == 150-radius || y_pos == radius+180)
+        {
+          if (x_pos>i*100 && x_pos<i*100+100 && displayBricks[i] == 1)
+          {
+            points += 1;
+            brickCounter +=1;
+            displayBricks[i] = 0;
+            y_speed *= -1;
+            if(speed>1)
+            {
+              speedChanger +=1;
+            }
+          }
+        }
+        if (x_pos==i*100+radius || x_pos==i*100+100+radius)
+        {
+          if (y_pos>=150 && y_pos<=180 && displayBricks[i] == 1)
+            {
+            points += 1;
+            brickCounter +=1;
+            displayBricks[i] = 0;
+            x_speed *= -1;
+            if(speed>1)
+            {
+              speedChanger +=1;
+            }
+          }
+        }
+      }
+      
+      
+      
+      
+      if (brickCounter == 6)
+      {
+        for(int i=0; i<6; i++)
+        {
+          displayBricks[i] = 1;
+        }
+        brickCounter = 0;
+      }
+     if (speedChanger == 10)
+      {
+        speedChanger = 0;
+        speed -= 1;
+      }
+      
+      
+     
+     
+     if (lives == 0)
+      { 
+        y_speed = 0;
+        x_speed = 0;
+      }
+      
+     
+     
+     
+      repaint(); 
+      try 
+      {
+        Thread.sleep (speed); 
+      } 
+      catch (InterruptedException ex) 
+      {
+      } 
+      
+      
+    }
+    
+  }
+  
+  
+  public void stop() {} 
+  
+  public void destroy() {} 
+  
+  public void paint (Graphics g) {
+    //draw bricks
+    int x = 0;
+    for(int b=0; b<6; b++)
+    {
+      if (displayBricks[b] == 1)
+      {
+        g.setColor(new Color(87, 59, 240));
+        g.fillRect(x,150,100,30);
+        g.setColor(new Color(38, 9, 196)); 
+        g.drawRect(x,150,100,30);
+        x += 100;
+       }
+      else
+      {
+        x += 100;
+      }
+    }
+    
+    //tilte
+    g.setFont(title);
+    g.setColor(new Color(154, 137, 245));
+    g.drawString("BRICK BREAKER",210,30);
+    g.drawRect(0,33,600,1);
+    
+    g.setColor(new Color(32, 238, 198)); 
+    g.setFont(font);
+    //draw ball and paddle
+    g.fillOval (x_pos - radius, y_pos - radius, 2 * radius, 2 * radius); 
+    g.fillRect (xP, yP, paddleWidth, paddleHeight);
+    
+    //labels
+    g.drawString("SCORE: "+points,460,30);
+    g.drawString("LIVES: "+lives,10,30);
+    if (play == false && lives > 0)
+    {
+      g.drawString("PRESS SPACE TO START",190,500);
+    }
+    
+    if (lives == 0)
+      { 
+        g.drawString("GAME OVER",240,200);
+      }
+  }
+  
+  
+  
+  public void update (Graphics g) 
+  {
+    if (dbImage == null) 
+    {
+      dbImage = createImage (appletsize_x, appletsize_y); 
+      dbg = dbImage.getGraphics (); 
+    } 
+    
+    dbg.setColor (new Color(50, 126, 239)); 
+    dbg.fillRect (0, 0, appletsize_x, appletsize_y); 
+     
+    dbg.setColor (getForeground()); 
+    paint (dbg); 
+    
+    g.drawImage (dbImage, 0, 0, this); 
+  } 
+} 
